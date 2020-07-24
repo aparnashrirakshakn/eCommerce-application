@@ -2,6 +2,7 @@ package com.example.demo.controllers;
 
 import java.util.List;
 
+import com.example.demo.ECommerceApplication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,11 +18,15 @@ import com.example.demo.model.persistence.repositories.CartRepository;
 import com.example.demo.model.persistence.repositories.OrderRepository;
 import com.example.demo.model.persistence.repositories.UserRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/api/order")
 public class OrderController {
-	
-	
+
+	private Logger log = LoggerFactory.getLogger(ECommerceApplication.class);
+
 	@Autowired
 	private UserRepository userRepository;
 	
@@ -33,10 +38,12 @@ public class OrderController {
 	public ResponseEntity<UserOrder> submit(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			log.error("User not found. A user with username {} does not exist.", username);
 			return ResponseEntity.notFound().build();
 		}
 		UserOrder order = UserOrder.createFromCart(user.getCart());
 		orderRepository.save(order);
+		log.info("Trying to create order {}.", order);
 		return ResponseEntity.ok(order);
 	}
 	
@@ -44,8 +51,10 @@ public class OrderController {
 	public ResponseEntity<List<UserOrder>> getOrdersForUser(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			log.error("User not found. A user with username {} does not exist.", username);
 			return ResponseEntity.notFound().build();
 		}
+		log.info("Trying to retrieve order for user with username {}.", username);
 		return ResponseEntity.ok(orderRepository.findByUser(user));
 	}
 }
